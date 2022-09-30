@@ -1,8 +1,10 @@
 
 
 var options = {
-    afterMonth: 3,
-    beforeMonth: 1,
+    // afterMonth: 3,
+    // beforeMonth: 1,
+    startDate: '2022-09-15',
+    endDate: '2022-11-08',
     unavailableDate: [5, 6],
     min: '08:00',
     max: '19:00',
@@ -21,14 +23,14 @@ const responseData = {
         '2022-12-15',
     ],
     unavailableTime: [{
-        start: '2022-9-25 09:00:00',
-        end: '2022-9-25 15:00:00'
+        start: '2022-10-26 09:00:00',
+        end: '2022-10-26 15:00:00'
     }, {
         start: '2022-10-12 09:00:00',
-        end: '2022-10-12 10:00:00'
+        end: '2022-10-12 15:00:00'
     }, {
         start: '2022-11-01 15:00:00',
-        end: '2022-11-21 17:00:00'
+        end: '2022-11-01 17:00:00'
     }],
     bookedDate: [
         '2022-09-27 15:15',
@@ -39,35 +41,149 @@ const responseData = {
 var picker = {
     day: moment().format('yyyy-MM-DD'),
     time: '',
+    timezone: 0,
 
     selectedMonth: moment()
 }
 
-function checkDisableDay(day) {
-    const now = moment();
-    const str = day.format('yyyy-MM-DD');
-    if (day.month() !== picker.selectedMonth.month()) return true;
-    if (str < now.format('yyyy-MM-DD')) return true;
-    if (options.unavailableDate.includes(day.weekday())) return true;
+function getTimezoneOffset(date, loc) {
+    // Try English to get offset. If get abbreviation, use French
+    let offset;
+    ['en','fr'].some(lang => {
+      // Get parts - can't get just timeZoneName, must get one other part at least
+      let parts = new Intl.DateTimeFormat(lang, {
+        minute: 'numeric',
+        timeZone: loc,
+        timeZoneName:'short'
+      }).formatToParts(date);
+      // Get offset from parts
+      let tzName = parts.filter(part => part.type == 'timeZoneName' && part.value);
+      // timeZoneName starting with GMT or UTC is offset - keep and stop looping
+      // Otherwise it's an abbreviation, keep looping
+      if (/^(GMT|UTC)/.test(tzName[0].value)) {
+        offset = tzName[0].value.replace(/GMT|UTC/,'') || '+0';
+        return true;
+      }
+    });
+    // Format offset as ±HH:mm
+    // Normalise minus sign as ASCII minus (charCode 45)
+    let sign = offset[0] == '\x2b'? '\x2b' : '\x2d';
+    let [h, m] = offset.substring(1).split(':');
+    let label = sign + h.padStart(2, '0') + ':' + (m || '00');
+    return { label, minutes: (parseInt(h) * 60 + parseInt(m || 0)) * ((sign) == '\x2b' ? 1 : -1) }
+}
+
+function initTimezone() {
+    var aryIannaTimeZones = Intl.supportedValuesOf('timeZone');
+    let htmlStr = `<optgroup label="UTC">
+                    <option value="UTC">UTC</option>`;
+    let lastRegion = 'UTC';
+
+    let date = new Date;
+    aryIannaTimeZones.forEach((timeZone) =>
+    {
+        const region = timeZone.split('/')[0], country = timeZone.split('/')[1];
+        if (!country) country = region;
+        let strTime = getTimezoneOffset(new Date(), timeZone).label;
+        if (lastRegion !== region) {
+            htmlStr += `</optgroup><optgroup label="${region}">`
+        } else {
+            htmlStr += `<option value="${timeZone}">${country}  (${strTime})</option>`
+        }
+        lastRegion = region;
+    });
+
+    htmlStr += `</optgroup>`;
+    document.getElementById('select-timezone').innerHTML = htmlStr;
+
+    $('#select-timezone').val(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    changedTimezone(false);
+}
+
+function changedTimezone(refresh = true) {
+    const val = $('#select-timezone').val();
+    picker.timezone = getTimezoneOffset(new Date(), val).minutes
+    if (refresh) setupCalendar();
+}
+
+function subTimeOffset(day) {
+    day.subtract({ minute: picker.timezone });
+}
+
+function restoreTimeOffset(day) {
+    day.add({ minute: picker.timezone });
+}
+
+function getDuration() {
+    return options.duration;
+}
+
+function getBuff() {
+    return options.buff;
+}
+
+function checkDisableDay(_day) {
+    if (_day.month() !== picker.selectedMonth.month()) return true;
+    
+    const day = moment(_day.format('yyyy-MM-DD') + ' 00:00:00');    
+    const ed_day = moment(day); ed_day.add({ day: 1 });
+
+    const tmpHour = moment(day);
+    while(tmpHour < ed_day) {
+        if (!checkDisableTime(tmpHour)) {
+            console.log(tmpHour.format('yyyy-MM-DD HH:mm'), ed_day.format('yyyy-MM-DD HH:mm'))
+            return false;
+        }
+        tmpHour.add({ minute: getBuff() + getDuration() });
+    }
+    return true;
+}
+
+function isInDisabledDays(_day) {
+    const st_day = moment(_day.format('yyyy-MM-DD') + ' 00:00:00'), ed_day = moment(_day.format('yyyy-MM-DD') + ' 23:59:59');
+    subTimeOffset(st_day); subTimeOffset(ed_day);
+    const st = st_day.format('yyyy-MM-DD HH:mm');
+    const ed = ed_day.format('yyyy-MM-DD HH:mm');
+
+    if (st < options.startDate || ed > options.endDate || st < moment().format('yyyy-MM-DD HH:mm')) return true;
+
     for (let i = 0; i < responseData.unavailableDate.length; i ++) {
         let itm = responseData.unavailableDate[i];
-        if (itm.includes(str)) return true;
+        if (itm >= st && itm < ed) return true;
     }
+
     return false;
 }
 
-function checkIfBookedDate(day) {
-    const str = day.format('yyyy-MM-DD');
+function isInDisabledWeekDays(_day) {
+    const day = moment(_day);
+    subTimeOffset(day);
+    if (options.unavailableDate.includes(day.weekday())) return true;
+    return false;
+}
+
+function checkIfBookedDate(_day) {
+    const st_day = moment(_day.format('yyyy-MM-DD') + ' 00:00:00'), ed_day = moment(_day.format('yyyy-MM-DD') + ' 23:59:59');
+    subTimeOffset(st_day); subTimeOffset(ed_day);
+    const st = st_day.format('yyyy-MM-DD HH:mm');
+    const ed = ed_day.format('yyyy-MM-DD HH:mm');
     for (let i = 0; i < responseData.bookedDate.length; i ++) {
         let itm = responseData.bookedDate[i];
-        if (itm.includes(str)) return true;
+        if (itm >= st && itm < ed) return true;
     }
     return false;
 }
 
-function checkDisableTime(time) {
-    const tmpTime = moment(time); tmpTime.add({ minute: options.duration + options.buff });
+function checkDisableTime(_time) {
+    const time = moment(_time); subTimeOffset(time);
+    const tmpTime = moment(time); 
+    tmpTime.add({ minute: getDuration() - 1 + getBuff() });
+    if (time.format('HH:mm') < options.min || time.format('HH:mm') > options.max) return true;
     const st = time.format('yyyy-MM-DD HH:mm'), ed = tmpTime.format('yyyy-MM-DD HH:mm');
+
+    if (isInDisabledDays(_time)) return true;
+    if (isInDisabledWeekDays(_time)) return true;
+    
     for (let i = 0; i < responseData.unavailableTime.length; i ++) {
         let itm = responseData.unavailableTime[i];
         const ust = moment(itm.start).format('yyyy-MM-DD HH:mm'), ued = moment(itm.end).format('yyyy-MM-DD HH:mm');
@@ -80,8 +196,10 @@ function checkDisableTime(time) {
     return false;
 }
 
-function checkIfBookedTime(time) {
-    const tmpTime = moment(time); tmpTime.add({ minute: options.duration + options.buff });
+function checkIfBookedTime(_time) {
+    const time = moment(_time); subTimeOffset(time);
+    const tmpTime = moment(time);
+    tmpTime.add({ minute: getDuration() - 1 + getBuff() });
     const st = time.format('yyyy-MM-DD HH:mm'), ed = tmpTime.format('yyyy-MM-DD HH:mm');
     for (let i = 0; i < responseData.bookedDate.length; i ++) {
         let itm = moment(responseData.bookedDate[i]).format('yyyy-MM-DD HH:mm');
@@ -92,17 +210,17 @@ function checkIfBookedTime(time) {
 
 function setupDatePicker() {
     let timeHtml = '';
-    const tmpHour = moment((picker.day + ' ' + options.min));
-    while(tmpHour.format('HH:mm') <= options.max) {
+    const tmpHour = moment((picker.day + ' 00:00'));
+    while(tmpHour.date() == moment(picker.day).date()) {
         if (!checkDisableTime(tmpHour)) {
             let className = '';
-            const tmpTime = moment(tmpHour); tmpTime.add({ minute: options.duration });
+            const tmpTime = moment(tmpHour); tmpTime.add({ minute: getDuration() - 1 });
             const st = tmpHour.format('HH:mm'), ed = tmpTime.format('HH:mm');
             if (st <= picker.time && picker.time <= ed) className += 'active';
             if (checkIfBookedTime(tmpHour)) className += ' actived'
             timeHtml += `<div class="time-btn ${className}" to="${st}">${tmpHour.format('HH:mm')}</div>`
         }
-        tmpHour.add({ minute: options.buff + options.duration });
+        tmpHour.add({ minute: getBuff() + getDuration() });
     }
     $('#time-btns').html(timeHtml);
 }
@@ -141,14 +259,29 @@ function monthDiff(dat1, dat2) {
     return month1 - month2;
 }
 
+function checkIfEnableBeforeMonth(month) {
+    const prevMonth = moment(month); subTimeOffset(prevMonth);
+    prevMonth.date(1); prevMonth.subtract({ day: 1 });
+
+    if (options.startDate <= prevMonth.format('yyyy-MM-DD')) return true;
+    return false;
+}
+
+function checkIfEnableAfterMonth(month) {
+    const nextMonth = moment(month.format('yyyy-MM-DD') + ' 23:59:59'); subTimeOffset(nextMonth);
+    nextMonth.date(1); nextMonth.add({ month: 1 });
+
+    if (options.endDate >= nextMonth.format('yyyy-MM-DD')) return true;
+    return false;
+}
+
 function setupMonthButtons () {
-    const diff = monthDiff(moment(), picker.selectedMonth);
-    if (diff >= options.beforeMonth) {
+    if (!checkIfEnableBeforeMonth(picker.selectedMonth)) {
         $('.month-btn.prev').removeClass('active');
     } else {
         $('.month-btn.prev').addClass('active');
     }
-    if (-diff >= options.afterMonth) {
+    if (!checkIfEnableAfterMonth(picker.selectedMonth)) {
         $('.month-btn.next').removeClass('active');
     } else {
         $('.month-btn.next').addClass('active');
@@ -156,15 +289,13 @@ function setupMonthButtons () {
 }
 
 function prevMonth() {
-    const diff = monthDiff(moment(), picker.selectedMonth);
-    if (diff >= options.beforeMonth) return;
+    if (!checkIfEnableBeforeMonth(picker.selectedMonth)) return;
     picker.selectedMonth.subtract({ month: 1 });
     setupCalendar();
 }
 
 function nextMonth() {
-    const diff = monthDiff(moment(), picker.selectedMonth);
-    if (-diff >= options.afterMonth) return;
+    if (!checkIfEnableAfterMonth(picker.selectedMonth)) return;
     picker.selectedMonth.add({ month: 1 });
     setupCalendar();
 }
@@ -212,9 +343,12 @@ function initCalendar () {
 
 function confirm() {
     if (!picker.time) return alert('time is not selected');
-    alert(picker.day + ' ' + picker.time);
+    const selected = moment(picker.day + ' ' + picker.time);
+    restoreTimeOffset( selected );
+    console.log(selected);
 }
 
 $(function() {
+    initTimezone();
     initCalendar();
 })

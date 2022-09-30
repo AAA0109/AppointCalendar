@@ -201,6 +201,18 @@ body {
     color: var(--active-text-color);
 }
 
+.timezone-container {
+    margin: 10px;
+}
+.timezone-container select {
+    width: 100%;
+    font-size: 16px;
+    line-height: 150%;
+    border: 1px solid var(--active-color) !important;
+    outline: none !important;
+    height: 30px;
+    padding: 0 5px;
+}
 
 
 .confirm-btn {

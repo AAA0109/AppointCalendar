@@ -46,6 +46,18 @@
                 </div>
                 <div id="appoint-time-picker" class="appoint-time-picker">
                     <div class="selected-day">Friday, Septempber 30</div>
+                    <div class="timezone-container">
+                        <select id="select-timezone" onchange="changedTimezone()" class="form-control" value = "UTC">
+                            <optgroup label="UTC">
+                                <option value="UTC">UTC</option>
+                            </optgroup>
+                            <optgroup label="America">
+                                <option value="America/Adak">Adak (-10:00)</option>
+                                <option value="America/Atka">Atka (-10:00)</option>
+                                <option value="America/Anchorage">Anchorage (-9:00)</option>
+                            </optgroup>
+                        </select>
+                    </div>
                     <div class="time-btns" id="time-btns">
                     </div>
                 </div>
