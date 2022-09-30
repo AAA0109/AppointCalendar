@@ -4,7 +4,7 @@ var options = {
     // afterMonth: 3,
     // beforeMonth: 1,
     startDate: '2022-09-15',
-    endDate: '2022-11-08',
+    endDate: '2022-11-25',
     unavailableDate: [5, 6],
     min: '08:00',
     max: '19:00',
@@ -103,6 +103,7 @@ function initTimezone() {
 function changedTimezone(refresh = true) {
     const val = $('#select-timezone').val();
     picker.timezone = getTimezoneOffset(new Date(), val).minutes
+    picker.time = '';
     if (refresh) setupCalendar();
 }
 
@@ -344,8 +345,8 @@ function initCalendar () {
 function confirm() {
     if (!picker.time) return alert('time is not selected');
     const selected = moment(picker.day + ' ' + picker.time);
-    restoreTimeOffset( selected );
-    console.log(selected);
+    subTimeOffset( selected );
+    alert(selected.format('yyyy-MM-DD HH:mm'));
 }
 
 $(function() {
