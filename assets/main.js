@@ -9,7 +9,7 @@ var options = {
     min: '08:00',
     max: '19:00',
     duration: 30,
-    buff: 15
+    buff: 0
 }
 
 const responseData = {
@@ -149,7 +149,7 @@ function isInDisabledDays(_day) {
     if (st < options.startDate || ed > options.endDate || st < moment().format('yyyy-MM-DD HH:mm')) return true;
 
     for (let i = 0; i < responseData.unavailableDate.length; i ++) {
-        let itm = responseData.unavailableDate[i];
+        let itm = responseData.unavailableDate[i] + " 00:00:00";
         if (itm >= st && itm < ed) return true;
     }
 
