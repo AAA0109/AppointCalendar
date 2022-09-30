@@ -1,0 +1,217 @@
+body {
+    margin: 0;
+    background-color: rgb(250, 250, 250);
+}
+
+:root {
+    --primary-text-color: rgb(25, 25, 25);
+    --active-color: rgb(0, 105, 255);
+    --active-text-color: white;
+    --active-color-trans: rgba(0, 105, 255, 0.5);
+    --active-color-trans-more: rgba(0, 105, 255, 0.2);
+    --disable-color: rgb(190, 190, 190);
+    --background-color: white;
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background-color: rgb(200, 200, 200);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb {
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+}
+
+.appoint-container {
+    margin: 30px auto 0;
+    max-width: 680px;
+    padding: 20px 20px;
+    border-radius: 15px;
+    box-shadow: 0 1px 8px 0 rgb(0 0 0 / 8%);
+    background-color: var(--background-color);
+}
+
+.appoint-container * {
+    transition: all .2s;
+    user-select: none;
+}
+
+.appoint-header {
+    text-align: center;
+}
+
+.appoint-content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.appoint-date-picker {
+    width: 350px;
+    margin: 0 10px;
+}
+
+.appoint-time-picker {
+    width: 250px;
+    margin: 0 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.month-picker {
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.month-label {
+    color: var(--primary-text-color);
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.month-btns {
+    display: flex;
+}
+
+.month-btn {
+    font-size: 18px;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    display: flex;
+    justify-content: center;
+    /* align-items: center; */
+
+    font-weight: bold;
+    color: var(--primary-text-color);
+    margin-left: 20px;
+    border-radius: 50%;
+}
+
+.month-btn:hover.active {
+    background-color: var(--active-color-trans-more);
+}
+
+.month-btn.active {
+    cursor: pointer;
+    color: var(--active-color);
+}
+
+.week-labels {
+    margin-top: 10px;
+}
+
+.day-labels {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.day-labels>div {
+    width: 14.2%;
+    height: 40px;
+    box-sizing: border-box;
+    color: var(--primary-text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.day-labels>div.disabled {
+    color: var(--disable-color);
+}
+
+.day-labels>div.active .day-label {
+    background-color: var(--active-color);
+    color: var(--active-text-color);
+}
+
+.day-labels>div.actived .day-label::after {
+    content: "";
+    position: absolute;
+    bottom: 2px;
+    left: calc(50% - 2.5px);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: var(--active-color-trans);
+}
+.day-labels>div.actived.disabled .day-label::after {
+    background-color: var(--disable-color);
+}
+
+.day-labels>div:hover:not(.disabled) .day-label {
+    border: 1px solid var(--active-color);
+}
+
+.day-labels>div:not(.disabled) .day-label {
+    cursor: pointer;
+}
+
+.day-label {
+    border-radius: 15px;
+    line-height: 30px;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    position: relative;
+}
+
+.selected-day {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--primary-text-color);
+    margin-left: 10px;
+}
+
+.time-btns {
+    height: 280px;
+    margin-top: 5px;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+.time-btn {
+    color: var(--active-color);
+    border: 1px solid var(--active-color-trans);
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 30px;
+    height: 30px;
+    cursor: pointer;
+    margin: 10px;
+}
+
+.time-btn:hover, .time-btn:active, .time-btn.active {
+    border: 1px solid var(--active-color);
+}
+
+.time-btn.actived {
+    background-color: var(--active-color-trans);
+    color: var(--active-text-color);
+}
+
+.time-btn.active {
+    background-color: var(--active-color);
+    color: var(--active-text-color);
+}
+
+
+
+.confirm-btn {
+    margin: 40px auto 0;
+    cursor: pointer;
+    background-color: var(--active-color);
+    width: 120px;
+    padding: 10px 0;
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    border-radius: 5px;
+}

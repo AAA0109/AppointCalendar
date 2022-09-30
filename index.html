@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+
+    <script>
+        // Ignore this in your implementation
+        window.isMbscDemo = true;
+    </script>
+
+    <title>Appointment booking</title>
+
+    <script src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>    
+
+    <link rel="stylesheet" href="./assets/style.css">
+</head>
+
+<body>
+    <div class="main-container">
+        <div class="appoint-container">
+            <h2 class="appoint-header">Select a Date & Time</h3>
+            <div class="appoint-content">
+                <div id="appoint-date-picker" class="appoint-date-picker">
+                    <div class="month-picker">
+                        <div class="month-label">
+                            Septempber 2013
+                        </div>
+                        <div class="month-btns">
+                            <div class="month-btn prev">&lt;</div>
+                            <div class="month-btn next">&gt;</div>
+                        </div>
+                    </div>
+                    <div class="week-labels day-labels">
+                        <div>SUN</div>
+                        <div>MON</div>
+                        <div>TUE</div>
+                        <div>WED</div>
+                        <div>THU</div>
+                        <div>FRI</div>
+                        <div>SAT</div>
+                    </div>
+                    <div id="days-container" class="day-labels"></div>
+                </div>
+                <div id="appoint-time-picker" class="appoint-time-picker">
+                    <div class="selected-day">Friday, Septempber 30</div>
+                    <div class="time-btns" id="time-btns">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="confirm-btn" onclick="confirm()">
+            Book Now
+        </div>
+    </div>
+    <script src="./assets/main.js"></script>
+</body>
