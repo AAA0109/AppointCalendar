@@ -142,11 +142,12 @@ function checkDisableDay(_day) {
 
 function isInDisabledDays(_day) {
     const st_day = moment(_day.format('yyyy-MM-DD') + ' 00:00:00'), ed_day = moment(_day.format('yyyy-MM-DD') + ' 23:59:59');
+    const now_day = moment(); subTimeOffset(now_day);
     subTimeOffset(st_day); subTimeOffset(ed_day);
     const st = st_day.format('yyyy-MM-DD HH:mm');
     const ed = ed_day.format('yyyy-MM-DD HH:mm');
 
-    if (st < options.startDate || ed > options.endDate || st < moment().format('yyyy-MM-DD HH:mm')) return true;
+    if (st < options.startDate || ed > options.endDate || ed <= now_day.format('yyyy-MM-DD HH:mm')) return true;
 
     for (let i = 0; i < responseData.unavailableDate.length; i ++) {
         let itm = responseData.unavailableDate[i] + " 00:00:00";
