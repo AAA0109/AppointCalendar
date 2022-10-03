@@ -8,8 +8,8 @@ var options = {
     unavailableDate: [5, 6],
     min: '08:00',
     max: '19:00',
-    duration: 30,
-    buff: 0
+    duration: 50,
+    buff: 23
 }
 
 const responseData = {
@@ -107,6 +107,12 @@ function changedTimezone(refresh = true) {
     if (refresh) setupCalendar();
 }
 
+function getStartTimeOffset () {
+    let [h, m] = options.min.split(':');
+    const off = (picker.timezone + parseInt(h) * 60 + parseInt(m)) % (options.duration + options.buff);
+    return off;
+}
+
 function subTimeOffset(day) {
     day.subtract({ minute: picker.timezone });
 }
@@ -126,7 +132,7 @@ function getBuff() {
 function checkDisableDay(_day) {
     if (_day.month() !== picker.selectedMonth.month()) return true;
     
-    const day = moment(_day.format('yyyy-MM-DD') + ' 00:00:00');    
+    const day = moment(_day.format('yyyy-MM-DD') + ' 00:00:00'); day.add({ minute: getStartTimeOffset() });
     const ed_day = moment(day); ed_day.add({ day: 1 });
 
     const tmpHour = moment(day);
@@ -213,6 +219,7 @@ function checkIfBookedTime(_time) {
 function setupDatePicker() {
     let timeHtml = '';
     const tmpHour = moment((picker.day + ' 00:00'));
+    tmpHour.add({ minute: getStartTimeOffset() });
     while(tmpHour.date() == moment(picker.day).date()) {
         if (!checkDisableTime(tmpHour)) {
             let className = '';
